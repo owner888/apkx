@@ -1,0 +1,16 @@
+.DS_Store
+*.apkm
+*.xapk
+*.apks
+*.idsig
+*.dex
+*.keystore
+*.jks
+*.pem
+*.pk8
+*.key
+logs/
+screenshots/
+build/
+out/
+.apkx.conf

@@ -1,0 +1,35 @@
+# ============================================================================
+# .apkx.conf — Project-level Configuration for apkx (Optional)
+# Copy this file to your project root as `.apkx.conf` or `~/.apkx/config`
+# ============================================================================
+
+# Base package prefix used when substituting clone/variant application IDs
+BASE_APP_ID_PREFIX="com.example"
+
+# Target smali directory where plugin/native AARs are injected
+SMALI_INJECT_DIR="smali_classes2"
+
+# Relative or absolute path to companion Java/Kotlin Gradle plugin repo
+PLUGIN_DIR="../../AppPlugin"
+PLUGIN_BASE_MODULE="plugin"
+PLUGIN_TARGET_PREFIX="app"
+PLUGIN_GRADLE_PROP_NAME="targetVersion"
+
+# Relative or absolute path to companion Go (gomobile) native project
+GOLANG_DIR="../../AppNative"
+
+# Default logcat filter tags for `apkx l` / `apkx --log`
+APKX_LOG_TAGS="-s AndroidRuntime -s DEBUG -s GoLog -s Go"
+
+# Custom keystore for signing repackaged APKs (auto-generates standard debug.keystore if omitted)
+# APKX_KEYSTORE="$HOME/.android/debug.keystore"
+# APKX_KEY_ALIAS="androiddebugkey"
+# APKX_KS_PASS="pass:android"
+# APKX_KEY_PASS="pass:android"
+
+# Custom multi-variant clone matrix for `apkx P5` / `apkx --all-variants` / `apkx --variant <name>`
+# Format: "suffix:applicationId"
+APKX_VARIANTS=(
+    "clone1:com.example.app.clone1"
+    "clone2:com.example.app.clone2"
+)

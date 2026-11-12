@@ -1,0 +1,288 @@
+#!/usr/bin/env bash
+# ============================================================================
+# apkx — All-in-One Android Reverse Engineering, Repackaging & Debug CLI
+# Copyright (c) 2026 Pig (https://pigagent.dev) & owner888
+# Crafted by Pig Coding Agent (https://github.com/owner888/pig)
+# ============================================================================
+
+set -euo pipefail
+
+resolve_script_dir() {
+    local prg="${BASH_SOURCE[0]}"
+    while [ -h "$prg" ]; do
+        local ls_out link
+        ls_out=$(ls -ld "$prg")
+        link=$(expr "$ls_out" : '.*-> \(.*\)$')
+        if expr "$link" : '/.*' >/dev/null; then
+            prg="$link"
+        else
+            prg="$(dirname "$prg")/$link"
+        fi
+    done
+    (cd "$(dirname "$prg")" && pwd)
+}
+
+APKX_SCRIPT_DIR=$(resolve_script_dir)
+APKX_ROOT_DIR=$(cd "$APKX_SCRIPT_DIR/.." && pwd)
+
+# Load modular libraries
+# shellcheck source=../lib/core.sh
+source "$APKX_ROOT_DIR/lib/core.sh"
+# shellcheck source=../lib/doctor.sh
+source "$APKX_ROOT_DIR/lib/doctor.sh"
+# shellcheck source=../lib/decode.sh
+source "$APKX_ROOT_DIR/lib/decode.sh"
+# shellcheck source=../lib/build.sh
+source "$APKX_ROOT_DIR/lib/build.sh"
+# shellcheck source=../lib/smali.sh
+source "$APKX_ROOT_DIR/lib/smali.sh"
+# shellcheck source=../lib/device.sh
+source "$APKX_ROOT_DIR/lib/device.sh"
+# shellcheck source=../lib/inspect.sh
+source "$APKX_ROOT_DIR/lib/inspect.sh"
+# shellcheck source=../lib/ai.sh
+source "$APKX_ROOT_DIR/lib/ai.sh"
+
+show_help() {
+    cat <<EOF
+
+${BLUE}╔══════════════════════════════════════════════════════════════════════════╗${NC}
+${BLUE}║${NC}  ${CYAN}${BOLD}apkx${NC} ${GREEN}v${APKX_VERSION}${NC} — Android Reverse Engineering, Repackaging & Debug CLI      ${BLUE}║${NC}
+${BLUE}╚══════════════════════════════════════════════════════════════════════════╝${NC}
+
+${YELLOW}${BOLD}Usage:${NC}
+  ${GREEN}apkx${NC} ${CYAN}<command>${NC} [options]
+
+${YELLOW}${BOLD}📦 Build & Reverse:${NC}
+  ${GREEN}decode${NC}        ${CYAN}<file.apk|apkm>${NC}       Decompile APK/APKM to smali/ (apktool) + source/ (jadx)
+  ${GREEN}convert${NC}       ${CYAN}<file.apkm|xapk>${NC}      Merge split APK bundle into standalone signed APK
+  ${GREEN}build, -b${NC}     ${CYAN}[dir]${NC}                 Build, zipalign & sign APK from smali/ (or Gradle project)
+  ${GREEN}sign${NC}          ${CYAN}<file.apk>${NC}            Zipalign (-p 4) & sign an existing APK file
+  ${GREEN}release, -R${NC}   ${CYAN}[--all|--variant V]${NC}   Full release build (native + plugin + release/variant APKs)
+
+${YELLOW}${BOLD}🧩 Plugin & Decompile:${NC}
+  ${GREEN}plugin${NC}                              Compile Gradle Java/Kotlin plugin & inject into smali
+  ${GREEN}native${NC}                              Compile Go gomobile native library & inject into smali
+  ${GREEN}inject${NC}        ${CYAN}<file.aar> [dir]${NC}      Inject standalone AAR package into smali_classesN
+  ${GREEN}adjust${NC}        ${CYAN}[dir]${NC}                 Organize smali dirs & strip .line/.source debug directives
+  ${GREEN}smali2jar${NC}     ${CYAN}[out_dir]${NC}             Convert smali/ directories to deobfuscated JARs
+  ${GREEN}smali${NC}         ${CYAN}<file.dex|File.java>${NC}  Convert .dex or .java source into .smali
+  ${GREEN}jadx${NC}          ${CYAN}<file.smali> [vim]${NC}    Decompile smali to Java (jadx-gui by default, or open in gvim)
+  ${GREEN}jd${NC}            ${CYAN}[file.jar]${NC}            Open JAR/class file in bundled JD-GUI
+
+${YELLOW}${BOLD}🚀 Run & Debug (ADB):${NC}
+  ${GREEN}run, -r${NC}       ${CYAN}[--clean]${NC}             Build -> install -> launch -> stream live logcat
+  ${GREEN}install, -i${NC}   ${CYAN}[file.apk]${NC}            Install APK to device & launch main activity
+  ${GREEN}log, -l${NC}       ${CYAN}[--pid | sec]${NC}         Stream colored logcat (--pid by process, or dump <sec>s to file)
+  ${GREEN}crash, -x${NC}                           Stream Crash / ANR / Fatal Exception monitor
+  ${GREEN}clear, -k${NC}     ${CYAN}[package]${NC}             Clear app data & caches (pm clear)
+  ${GREEN}uninstall, -u${NC} ${CYAN}[package]${NC}             Uninstall app from device
+
+${YELLOW}${BOLD}📱 Device & Utilities:${NC}
+  ${GREEN}devices, -d${NC}                         List connected devices & show hardware/OS/battery details
+  ${GREEN}packages${NC}      ${CYAN}[keyword] [--all]${NC}     List installed packages on device (3rd-party by default)
+  ${GREEN}pull${NC}          ${CYAN}<package|keyword>${NC}     Extract installed APK from device (auto-merges split APKs)
+  ${GREEN}wifi, -w${NC}      ${CYAN}[port]${NC}                Switch ADB to wireless TCP/IP debugging
+  ${GREEN}usb${NC}                                 Switch ADB back to wired USB debugging
+  ${GREEN}screen, -p${NC}                          Capture device screenshot to ./screenshots/ & open preview
+  ${GREEN}info, -s${NC}      ${CYAN}[file.apk]${NC}            Inspect APK metadata, component/.so sizes & 64K DEX methods
+  ${GREEN}test, -t${NC}      ${CYAN}[sec]${NC}                 Automated smoke test (build -> install -> launch -> verify)
+  ${GREEN}doctor${NC}                              Diagnose JDK, Android SDK, ADB, jadx & bundled JARs
+  ${GREEN}version, -v${NC}                         Show apkx, git & project version info
+  ${GREEN}help, -h${NC}                            Show this help message
+
+EOF
+}
+
+main() {
+    local cmd="${1:-help}"
+    local arg2="${2:-}"
+    if [[ "$arg2" == -* ]] || [[ "$arg2" =~ ^[0-9]+$ ]]; then
+        init_project_context ""
+    else
+        init_project_context "$arg2"
+    fi
+    init_toolchain
+
+    case "$cmd" in
+        # ── Build & Reverse ──────────────────────────────────────────────────
+        decode|-D)
+            cmd_decode "${2:-}" "${3:-}"
+            ;;
+        convert|apkm2apk)
+            cmd_convert "${2:-}"
+            ;;
+        build|-b|b)
+            cmd_build -d
+            ;;
+        sign)
+            cmd_sign "${2:-}"
+            ;;
+        release|-R|P|package|dp)
+            case "${2:-}" in
+                --all|-a)
+                    cmd_package_all_variants
+                    ;;
+                --variant|-v)
+                    cmd_variant "${3:-}"
+                    ;;
+                *)
+                    cmd_package
+                    ;;
+            esac
+            ;;
+        --all-variants|P5|package5)
+            cmd_package_all_variants
+            ;;
+        --variant)
+            cmd_variant "${2:-}"
+            ;;
+
+        # ── Plugin & Decompile ───────────────────────────────────────────────
+        plugin|p)
+            cmd_plugin
+            ;;
+        native|n)
+            shift || true
+            cmd_native gmflags="-tags debug" "$@"
+            ;;
+        inject|inject-aar)
+            cmd_inject_aar "${2:-}" "${3:-$SMALI_INJECT_DIR}"
+            ;;
+        adjust|organize)
+            cmd_adjust_smali "${2:-}" "${3:-}"
+            ;;
+        smali2jar|s2j)
+            cmd_smali2jar "${2:-}"
+            ;;
+        smali|clone)
+            cmd_to_smali "${2:-}"
+            ;;
+        java2smali|j2s)
+            cmd_java2smali "${2:-}"
+            ;;
+        smali2java|s2java|java)
+            cmd_smali2java "${2:-}"
+            ;;
+        dex2smali|d2s)
+            cmd_dex2smali "${2:-}"
+            ;;
+        jar2dex|j2d)
+            cmd_jar2dex "${2:-}"
+            ;;
+        jadx|j)
+            cmd_jadx_smali "${2:-}" "${3:-}"
+            ;;
+        jd|jd-gui)
+            cmd_jd_gui "${2:-}"
+            ;;
+
+        # ── Run & Debug (ADB) ────────────────────────────────────────────────
+        run|--run|-r|brl)
+            if [ "${2:-}" = "--clean" ] || [ "${2:-}" = "-c" ]; then
+                cmd_build_run_logcat_clear
+            else
+                cmd_build_run_logcat
+            fi
+            ;;
+        install|--install|-i|r)
+            cmd_run
+            ;;
+        log|--log|-l|logcat|l)
+            if [ "${2:-}" = "--pid" ] || [ "${2:-}" = "-p" ]; then
+                cmd_debug
+            elif [[ "${2:-}" =~ ^[0-9]+$ ]]; then
+                cmd_logcat_dump "$2"
+            elif [ "${2:-}" = "--dump" ]; then
+                cmd_logcat_dump "${3:-10}"
+            else
+                cmd_logcat
+            fi
+            ;;
+        debug)
+            cmd_debug
+            ;;
+        crash|--crash|-x|c)
+            cmd_crash "${2:-}"
+            ;;
+        clear|--clear|-k)
+            cmd_clear "${2:-}"
+            ;;
+        uninstall|--uninstall|-u)
+            cmd_uninstall "${2:-}"
+            ;;
+
+        # ── Device & Utilities ───────────────────────────────────────────────
+        devices|device|--devices|--device|-d)
+            cmd_device_info
+            ;;
+        packages|pkgs|pm)
+            shift || true
+            cmd_packages "$@"
+            ;;
+        pull)
+            cmd_pull "${2:-}" "${3:-}"
+            ;;
+        wifi|--wifi|-w)
+            cmd_wifi "${2:-5555}"
+            ;;
+        usb|--usb)
+            cmd_usb
+            ;;
+        screen|--screen|-p)
+            cmd_screen
+            ;;
+        info|size|pkginfo|--size|-s)
+            cmd_size "${2:-}"
+            ;;
+        check|build-only|--build-only)
+            cmd_build_only
+            ;;
+        test|--test|-t)
+            cmd_smoke_test "${2:-8}"
+            ;;
+        log-dump|logcat-dump|--log-dump|--logcat-dump|-g)
+            cmd_logcat_dump "${2:-10}"
+            ;;
+        doctor)
+            cmd_doctor
+            ;;
+        setup)
+            shift || true
+            cmd_setup "$@"
+            ;;
+        framework)
+            cmd_framework "${2:-}"
+            ;;
+        version|--version|-v)
+            cmd_version
+            ;;
+        help|--help|-h|h|"")
+            show_help
+            ;;
+
+        # ── Legacy Shorthand & User Hook Fallback ────────────────────────────
+        br|buildRun)
+            cmd_build_run
+            ;;
+        brlc)
+            cmd_build_run_logcat_clear
+            ;;
+        nbrl)
+            cmd_native_build_run_logcat
+            ;;
+        rl)
+            cmd_run_logcat
+            ;;
+        *)
+            if declare -f "apkx_cmd_${cmd}" >/dev/null 2>&1; then
+                shift || true
+                "apkx_cmd_${cmd}" "$@"
+            else
+                fail "Unknown command: $cmd. Run 'apkx --help' for usage."
+            fi
+            ;;
+    esac
+}
+
+main "$@"
