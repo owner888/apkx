@@ -113,7 +113,7 @@ main() {
             cmd_convert "${2:-}"
             ;;
         build|-b|b)
-            cmd_build -d
+            cmd_build "${2:-}"
             ;;
         sign)
             cmd_sign "${2:-}"
@@ -223,10 +223,10 @@ main() {
         pull)
             cmd_pull "${2:-}" "${3:-}"
             ;;
-        wifi|--wifi|-w)
+        wifi|--wifi|-wifi|-w|adbwifi)
             cmd_wifi "${2:-5555}"
             ;;
-        usb|--usb)
+        usb|--usb|-usb|adbusb)
             cmd_usb
             ;;
         screen|--screen|-p)

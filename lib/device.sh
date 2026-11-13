@@ -21,7 +21,8 @@ check_device() {
 
     local serial
     serial=$(echo "$devices" | awk '{print $1}')
-    ok "Device connected: ${CYAN}${serial}${NC}"
+    export ANDROID_SERIAL="${ANDROID_SERIAL:-$serial}"
+    ok "Device connected: ${CYAN}${ANDROID_SERIAL}${NC}"
 }
 
 get_app_pid() {
