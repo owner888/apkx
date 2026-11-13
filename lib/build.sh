@@ -207,9 +207,9 @@ cmd_inject_aar() {
         $BAKSMALI_CMD d --di false -o "$smali_dir" classes.dex
         find "$smali_dir" -name "BuildConfig.smali" -delete 2>/dev/null || true
 
-        # Move root defpackage classes into L...
+        # Move root defpackage classes into L... and strip .source directives
         find "$smali_dir" -name '*.smali' -print0 2>/dev/null | \
-            xargs -0 -P 8 -n 200 perl -pi -e 's/Ldefpackage\//L/g'
+            xargs -0 -P 8 -n 200 perl -ni -e 's/Ldefpackage\//L/g; print unless /^\.source /'
 
         if [ -n "$hook_fn" ]; then
             "$hook_fn" "$smali_dir"
@@ -249,7 +249,7 @@ cmd_plugin() {
         if [ -e "${PLUGIN_MODULE}/proguard-rules.pro" ]; then
             proguard_arg="-PproguardRules=../${PLUGIN_MODULE}/proguard-rules.pro"
         fi
-        ./gradlew clean "${base_mod}:assembleRelease" $proguard_arg "-P${PLUGIN_GRADLE_PROP_NAME}=${PLUGIN_TARGET_MODULE}"
+        ./gradlew "${base_mod}:clean" "${base_mod}:assembleRelease" $proguard_arg "-P${PLUGIN_GRADLE_PROP_NAME}=${PLUGIN_TARGET_MODULE}"
     )
     cmd_inject_aar "$PLUGIN_DIR/${base_mod}/build/outputs/aar/${base_mod}-release.aar" "$SMALI_INJECT_DIR"
     cp -a "$PLUGIN_DIR/${base_mod}/src/main/res/values"* "$original_dir/smali/res/" 2>/dev/null || true
@@ -257,7 +257,7 @@ cmd_plugin() {
     if [ -d "$PLUGIN_DIR/$PLUGIN_MODULE" ]; then
         (
             cd "$PLUGIN_DIR"
-            ./gradlew clean "${PLUGIN_MODULE}:assembleRelease" "-P${PLUGIN_GRADLE_PROP_NAME}=${PLUGIN_TARGET_MODULE}"
+            ./gradlew "${PLUGIN_MODULE}:clean" "${PLUGIN_MODULE}:assembleRelease" "-P${PLUGIN_GRADLE_PROP_NAME}=${PLUGIN_TARGET_MODULE}"
         )
         cmd_inject_aar "$PLUGIN_DIR/${PLUGIN_MODULE}/build/outputs/aar/${PLUGIN_MODULE}-release.aar" "$SMALI_INJECT_DIR"
         cp -a "$PLUGIN_DIR/${PLUGIN_MODULE}/src/main/res/values"* "$original_dir/smali/res/" 2>/dev/null || true
