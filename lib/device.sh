@@ -260,7 +260,7 @@ cmd_device_info() {
     density=$("$ADB" shell wm density 2>/dev/null | awk '{print $NF}' | tr -d '\r')
     ip=$(detect_device_ip)
     storage=$("$ADB" shell df -h /data 2>/dev/null | tail -n 1 | awk '{printf "%s / %s (Used %s)", $3, $2, $5}' || true)
-    battery=$("$ADB" shell dumpsys battery 2>/dev/null | grep "level:" | awk '{print $2}' | tr -d '\r' || true)
+    battery=$("$ADB" shell dumpsys battery 2>/dev/null | grep -m1 "^[[:space:]]*level:" | awk '{print $2}' | tr -d '\r' || true)
 
     echo -e "  ${BOLD}Serial:${NC}       ${serial}"
     echo -e "  ${BOLD}Device:${NC}       ${brand} ${model}"
@@ -278,11 +278,15 @@ cmd_device_info() {
 # Multi-fallback device IP detection (ip route -> ip address -> ifconfig -> getprop)
 detect_device_ip() {
     local ip=""
-    # Method 1: ip route wlan0
-    ip=$("$ADB" shell ip route 2>/dev/null | awk '/wlan0/ {print $9}' | head -n 1 | tr -d '\r' || true)
-    # Method 2: ip address
+    # Method 1: ip -4 addr show wlan0
+    ip=$("$ADB" shell "ip -4 addr show wlan0 2>/dev/null | awk '/inet / {print \$2}' | cut -d/ -f1 | head -n 1" 2>/dev/null | tr -d '\r' || true)
+    # Method 2: ip route wlan0 src
     if [ -z "$ip" ]; then
-        ip=$("$ADB" shell "ip address | grep 'inet ' | grep -v '127.0.0.1'" 2>/dev/null | head -n 1 | awk '{print $2}' | cut -d'/' -f1 | tr -d '\r' || true)
+        ip=$("$ADB" shell ip route 2>/dev/null | awk '/wlan0/ {for(i=1;i<=NF;i++) if($i=="src") print $(i+1)}' | head -n 1 | tr -d '\r' || true)
+    fi
+    # Method 3: ip address (skip loopback and cellular/CGNAT 100.64.0.0/10)
+    if [ -z "$ip" ]; then
+        ip=$("$ADB" shell "ip -4 addr show 2>/dev/null | awk '/inet / {print \$2}' | cut -d/ -f1 | grep -v -E '^(127\.|100\.(6[4-9]|[7-9][0-9]|1[0-1][0-9]|12[0-7])\.)' | head -n 1" 2>/dev/null | tr -d '\r' || true)
     fi
     # Method 3: ifconfig
     if [ -z "$ip" ]; then
