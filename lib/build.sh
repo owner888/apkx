@@ -186,7 +186,8 @@ build_gradle_project() {
 # Args: $1 = path/to/file.aar, $2 = target_smali_dir (default: smali_classes2), $3 = optional hook function
 cmd_inject_aar() {
     local aar_path="${1:-}"
-    local smali_dir="${2:-$SMALI_INJECT_DIR}"
+    local smali_dir
+    smali_dir=$(basename "${2:-$SMALI_INJECT_DIR}")
     local hook_fn="${3:-}"
 
     if [ -z "$aar_path" ] || [ ! -f "$aar_path" ]; then
