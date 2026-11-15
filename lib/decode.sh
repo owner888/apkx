@@ -183,10 +183,12 @@ cmd_convert() {
     local unsigned_apk="$tmp_output/unsigned.apk"
     $APKTOOL_CMD b -f -o "$unsigned_apk" "$base_src"
 
-    # 6. Zipalign (-p for page-aligned uncompressed .so libraries)
+    # 6. Zipalign (-P 16 for 16KB page-aligned uncompressed .so libraries)
     local aligned_apk="$tmp_output/aligned.apk"
     if command -v "$ZIPALIGN" &>/dev/null || [ -x "$ZIPALIGN" ]; then
-        "$ZIPALIGN" -p -f 4 "$unsigned_apk" "$aligned_apk"
+        if ! "$ZIPALIGN" -P 16 -f 4 "$unsigned_apk" "$aligned_apk" 2>/dev/null; then
+            "$ZIPALIGN" -p -f 4 "$unsigned_apk" "$aligned_apk"
+        fi
     else
         cp "$unsigned_apk" "$aligned_apk"
     fi

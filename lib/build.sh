@@ -132,9 +132,11 @@ cmd_build() {
         [ -f "$smali_root/res/xml/shortcuts.xml" ] && sed_inplace -e "s/${app_id}/${find_str}/g" "$smali_root/res/xml/shortcuts.xml"
     fi
 
-    # Zipalign 4
+    # Zipalign (16KB page-aligned for Android 15+ .so compatibility)
     mv "$apk_file_name" "${apk_file_name}_tmp"
-    "$ZIPALIGN" -f 4 "${apk_file_name}_tmp" "$apk_file_name"
+    if ! "$ZIPALIGN" -P 16 -f 4 "${apk_file_name}_tmp" "$apk_file_name" 2>/dev/null; then
+        "$ZIPALIGN" -p -f 4 "${apk_file_name}_tmp" "$apk_file_name"
+    fi
     rm -rf "${apk_file_name}_tmp"
 
     # Sign APK
@@ -300,9 +302,9 @@ cmd_native() {
         rm -rf "$golang_build_dir"
         mkdir -p "$golang_build_dir"
         go version
-        info "Compiling Android arm64 .so via gomobile..."
+        info "Compiling Android arm64 .so via gomobile (16KB page-aligned)..."
         # shellcheck disable=SC2086
-        gomobile bind -o "$aar_output" -target=android/arm64 -androidapi 21 -v -trimpath -ldflags "-s -w" ${gmflags} .
+        gomobile bind -o "$aar_output" -target=android/arm64 -androidapi 21 -v -trimpath -ldflags "-s -w -extldflags=-Wl,-z,max-page-size=16384" ${gmflags} .
         if declare -f apkx_after_native_bind >/dev/null 2>&1; then
             apkx_after_native_bind "$aar_output"
         fi
@@ -343,7 +345,9 @@ cmd_sign() {
     local tmp_aligned="${target%.apk}_aligned_tmp.apk"
 
     if command -v "$ZIPALIGN" &>/dev/null || [ -x "$ZIPALIGN" ]; then
-        "$ZIPALIGN" -p -f 4 "$target" "$tmp_aligned"
+        if ! "$ZIPALIGN" -P 16 -f 4 "$target" "$tmp_aligned" 2>/dev/null; then
+            "$ZIPALIGN" -p -f 4 "$target" "$tmp_aligned"
+        fi
     else
         cp "$target" "$tmp_aligned"
     fi
