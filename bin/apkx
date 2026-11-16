@@ -113,7 +113,7 @@ main() {
             cmd_convert "${2:-}"
             ;;
         build|-b|b)
-            cmd_build "${2:-}"
+            cmd_build "${2:-}" "${3:-}" "${4:-}"
             ;;
         sign)
             cmd_sign "${2:-}"
