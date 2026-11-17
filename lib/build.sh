@@ -242,6 +242,10 @@ cmd_plugin() {
         return 0
     fi
 
+    if [ -z "${APKTOOL_YML:-}" ] || [ ! -f "${APKTOOL_YML}" ]; then
+        fail "No apktool.yml found in $PWD (looked for ./smali/apktool.yml and ./apktool.yml). Run apkx from the project directory, e.g. AGC11.1.19/"
+    fi
+
     info "Building & injecting Java plugin from ${PLUGIN_DIR}/${PLUGIN_MODULE} ..."
     local original_dir="$PWD"
     local base_mod="$PLUGIN_BASE_MODULE"
