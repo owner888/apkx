@@ -71,7 +71,7 @@ ${YELLOW}${BOLD}🧩 Plugin & Decompile:${NC}
   ${GREEN}jd${NC}            ${CYAN}[file.jar]${NC}            Open JAR/class file in bundled JD-GUI
 
 ${YELLOW}${BOLD}🚀 Run & Debug (ADB):${NC}
-  ${GREEN}run, -r${NC}       ${CYAN}[--clean]${NC}             Build -> install -> launch -> stream live logcat
+  ${GREEN}run, -r${NC}       ${CYAN}[--clean|<variant>]${NC}   Build -> install -> launch -> stream live logcat
   ${GREEN}install, -i${NC}   ${CYAN}[file.apk]${NC}            Install APK to device & launch main activity
   ${GREEN}log, -l${NC}       ${CYAN}[--pid | sec]${NC}         Stream colored logcat (--pid by process, or dump <sec>s to file)
   ${GREEN}crash, -x${NC}                           Stream Crash / ANR / Fatal Exception monitor
@@ -181,6 +181,8 @@ main() {
         run|--run|-r|brl)
             if [ "${2:-}" = "--clean" ] || [ "${2:-}" = "-c" ]; then
                 cmd_build_run_logcat_clear
+            elif [ -n "${2:-}" ]; then
+                cmd_build_run_variant "$2"
             else
                 cmd_build_run_logcat
             fi

@@ -86,6 +86,7 @@ apkx jd classes.jar
 # 编译注入插件 + 回编签名 + 安装启动 + 实时日志流
 apkx run                    # 或: apkx -r
 apkx run --clean            # 启动前自动清空 App 数据
+apkx run samsung            # 构建 APKX_VARIANTS 中的指定变体（或 suffix:applicationId），再安装、启动、附着 logcat
 
 # 仅安装 APK 并启动（不持续监听日志）
 apkx install app.apk        # 或: apkx -i

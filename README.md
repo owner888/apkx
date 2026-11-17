@@ -86,6 +86,7 @@ apkx jd classes.jar
 # Build + install + launch + stream live logcat
 apkx run                    # or: apkx -r
 apkx run --clean            # Clear app data before launching
+apkx run samsung            # Build a named variant from APKX_VARIANTS (or suffix:applicationId), then install, launch, logcat
 
 # Only install APK & launch app (no log stream)
 apkx install app.apk        # or: apkx -i

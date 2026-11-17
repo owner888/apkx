@@ -101,6 +101,26 @@ cmd_build_run() {
     cmd_run
 }
 
+# Build a named variant from APKX_VARIANTS (or suffix:applicationId), install, launch, stream logcat
+cmd_build_run_variant() {
+    local target_var="${1:-}" suffix pkg entry
+    if [[ "$target_var" == *":"* ]]; then
+        suffix="${target_var%%:*}"; pkg="${target_var#*:}"
+    else
+        for entry in "${APKX_VARIANTS[@]}"; do
+            if [ "${entry%%:*}" = "$target_var" ]; then
+                suffix="$target_var"; pkg="${entry#*:}"
+            fi
+        done
+    fi
+    [ -z "${pkg:-}" ] && fail "Variant '${target_var}' not found in APKX_VARIANTS"
+    cmd_plugin
+    cmd_build "" "$pkg" "$suffix"
+    APK_FILE="$(basename "$PWD")_${suffix}.apk"
+    cmd_run
+    cmd_logcat
+}
+
 cmd_build_run_logcat() {
     cmd_plugin
     cmd_build
