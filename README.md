@@ -60,6 +60,7 @@ apkx build                  # or: apkx -b
 apkx release                # or: apkx -R
 apkx release --all          # Build all clone variants configured in .apkx.conf
 apkx release --variant beta # Build a single named clone variant
+apkx release beta           # Shorthand for the above (also: apkx -R beta)
 ```
 
 ### 2. Plugin & Decompile

@@ -58,7 +58,7 @@ ${YELLOW}${BOLD}📦 Build & Reverse:${NC}
   ${GREEN}convert${NC}       ${CYAN}<file.apkm|xapk>${NC}      Merge split APK bundle into standalone signed APK
   ${GREEN}build, -b${NC}     ${CYAN}[dir]${NC}                 Build, zipalign & sign APK from smali/ (or Gradle project)
   ${GREEN}sign${NC}          ${CYAN}<file.apk>${NC}            Zipalign (-p 4) & sign an existing APK file
-  ${GREEN}release, -R${NC}   ${CYAN}[--all|--variant V]${NC}   Full release build (native + plugin + release/variant APKs)
+  ${GREEN}release, -R${NC}   ${CYAN}[--all|<variant>]${NC}     Full release build (native + plugin + release/variant APKs)
 
 ${YELLOW}${BOLD}🧩 Plugin & Decompile:${NC}
   ${GREEN}plugin${NC}                              Compile Gradle Java/Kotlin plugin & inject into smali
@@ -126,8 +126,12 @@ main() {
                 --variant|-v)
                     cmd_variant "${3:-}"
                     ;;
-                *)
+                ""|-*)
                     cmd_package
+                    ;;
+                *)
+                    # apkx -R samsung  ==  apkx -R --variant samsung
+                    cmd_variant "$2"
                     ;;
             esac
             ;;

@@ -60,6 +60,7 @@ apkx build                  # 或: apkx -b
 apkx release                # 或: apkx -R
 apkx release --all          # 打包 .apkx.conf 中配置的所有多渠道克隆包
 apkx release --variant beta # 打包单个指定渠道克隆包
+apkx release beta           # 上一条的简写（也可 apkx -R beta）
 ```
 
 ### 2. 插件注入与反编译工具
