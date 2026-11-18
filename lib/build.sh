@@ -108,6 +108,10 @@ cmd_build() {
         if [ -f "$smali_root/res/xml/shortcuts.xml" ]; then
             sed_inplace -e "s/$find_str/${app_id}/g" "$smali_root/res/xml/shortcuts.xml"
         fi
+        # Explicit-component intents inside preference screens carry the package name too
+        if [ -f "$smali_root/res/xml/camera_gm3_preferences.xml" ]; then
+            sed_inplace -e "s/$find_str/${app_id}/g" "$smali_root/res/xml/camera_gm3_preferences.xml"
+        fi
     elif [ -n "$app_id" ] && [ -f "$smali_root/AndroidManifest.xml" ]; then
         find_str=$(grep -oE 'package="[^"]+"' "$smali_root/AndroidManifest.xml" | head -n 1 | cut -d'"' -f2 || true)
         if [ -n "$find_str" ]; then
@@ -130,6 +134,7 @@ cmd_build() {
     if [ -n "$app_id" ] && [ -n "$find_str" ]; then
         [ -f "$smali_root/AndroidManifest.xml" ] && sed_inplace -e "s/${app_id}/${find_str}/g" "$smali_root/AndroidManifest.xml"
         [ -f "$smali_root/res/xml/shortcuts.xml" ] && sed_inplace -e "s/${app_id}/${find_str}/g" "$smali_root/res/xml/shortcuts.xml"
+        [ -f "$smali_root/res/xml/camera_gm3_preferences.xml" ] && sed_inplace -e "s/${app_id}/${find_str}/g" "$smali_root/res/xml/camera_gm3_preferences.xml"
     fi
 
     # Zipalign (16KB page-aligned for Android 15+ .so compatibility)
