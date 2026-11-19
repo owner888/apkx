@@ -233,12 +233,32 @@ init_project_context() {
     APK_FILE="$TARGET_ARG"
 
     APKTOOL_YML=""
+    if [ -n "$TARGET_ARG" ] && [ -f "${TARGET_ARG%/}/smali/apktool.yml" ]; then
+        cd "${TARGET_ARG%/}"
+        TARGET_ARG=""
+        APK_FILE=""
+    elif [ -n "$TARGET_ARG" ] && [ -f "${TARGET_ARG%/}/apktool.yml" ]; then
+        cd "${TARGET_ARG%/}"
+        TARGET_ARG=""
+        APK_FILE=""
+    elif [ ! -f "smali/apktool.yml" ] && [ ! -f "apktool.yml" ]; then
+        local found_yml
+        found_yml=$(find . -maxdepth 3 -name 'apktool.yml' 2>/dev/null | head -n 1 || true)
+        if [ -n "$found_yml" ]; then
+            local yml_dir
+            yml_dir=$(dirname "$found_yml")
+            if [ "$(basename "$yml_dir")" = "smali" ]; then
+                cd "$(dirname "$yml_dir")"
+            else
+                cd "$yml_dir"
+            fi
+        fi
+    fi
+
     if [ -f "smali/apktool.yml" ]; then
         APKTOOL_YML="smali/apktool.yml"
     elif [ -f "apktool.yml" ]; then
         APKTOOL_YML="apktool.yml"
-    else
-        APKTOOL_YML=$(find . -maxdepth 3 -name 'apktool.yml' 2>/dev/null | head -n 1 || true)
     fi
 
     PROJ_DIR="${PWD##*/}"
