@@ -30,12 +30,25 @@
 
 ## 安装与使用
 
+### 一键安装（推荐）
+
+自动检测当前系统环境与依赖（`git`、`java`/`JDK 11+`、`adb`、`jadx`、`zipalign`、`aapt` 等），缺失的依赖自动按系统包管理器（macOS `brew`、Ubuntu/Debian `apt`、Fedora/RHEL `dnf`、Arch `pacman`、Alpine `apk`、Android Termux `pkg`）安装，从 GitHub 克隆到 `~/.apkx`，自动完成 Android 公开化框架与 `debug.keystore` 初始化，并配置 `PATH`：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/owner888/apkx/main/install.sh | sh
+```
+
+### 手动克隆安装
+
 ```bash
 git clone https://github.com/owner888/apkx.git
 ln -s "$(pwd)/apkx/bin/apkx" /usr/local/bin/apkx
 
 # 检查环境状态
 apkx doctor
+
+# 随时升级到最新版本
+apkx upgrade
 
 # （可选）安装为 Pig Coding Agent 技能插件
 pig install git:github.com/owner888/apkx

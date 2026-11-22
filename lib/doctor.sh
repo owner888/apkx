@@ -145,6 +145,20 @@ cmd_setup() {
     cmd_doctor
 }
 
+cmd_upgrade() {
+    if [ ! -d "$APKX_HOME/.git" ]; then
+        fail "apkx in ${APKX_HOME} is not a git repository. Reinstall with: curl -fsSL https://raw.githubusercontent.com/owner888/apkx/main/install.sh | sh"
+    fi
+
+    if ! git -C "$APKX_HOME" diff --quiet 2>/dev/null; then
+        fail "apkx in ${APKX_HOME} has uncommitted local changes; commit or stash them before upgrading."
+    fi
+
+    info "Upgrading apkx in ${APKX_HOME}..."
+    git -C "$APKX_HOME" pull --ff-only
+    ok "apkx upgraded to latest ($(git -C "$APKX_HOME" rev-parse --short HEAD 2>/dev/null || echo 'HEAD'))"
+}
+
 cmd_framework() {
     local fw_apk="${1:-}"
     if [ -n "$fw_apk" ]; then

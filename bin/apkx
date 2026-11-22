@@ -88,6 +88,7 @@ ${YELLOW}${BOLD}📱 Device & Utilities:${NC}
   ${GREEN}info, -s${NC}      ${CYAN}[file.apk]${NC}            Inspect APK metadata, component/.so sizes & 64K DEX methods
   ${GREEN}test, -t${NC}      ${CYAN}[sec]${NC}                 Automated smoke test (build -> install -> launch -> verify)
   ${GREEN}doctor${NC}                              Diagnose JDK, Android SDK, ADB, jadx & bundled JARs
+  ${GREEN}upgrade${NC}                             Upgrade apkx to the latest version from GitHub
   ${GREEN}version, -v${NC}                         Show apkx, git & project version info
   ${GREEN}help, -h${NC}                            Show this help message
 
@@ -252,6 +253,9 @@ main() {
             ;;
         doctor)
             cmd_doctor
+            ;;
+        upgrade|update)
+            cmd_upgrade
             ;;
         setup)
             shift || true

@@ -30,12 +30,25 @@ All required reverse-engineering JARs (`apktool` 3.0.3 with pre-publicized Andro
 
 ## Installation
 
+### One-Line Install (Recommended)
+
+Automatically checks system dependencies (`git`, `java`/`JDK 11+`, `adb`, `jadx`, `zipalign`, `aapt`, etc.), installs any missing tools via your OS package manager (`brew`, `apt`, `dnf`, `pacman`, `apk`, or Termux `pkg`), clones `apkx` into `~/.apkx`, initializes the publicized Android framework and `debug.keystore`, and puts `apkx` on your `PATH`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/owner888/apkx/main/install.sh | sh
+```
+
+### Manual Git Clone
+
 ```bash
 git clone https://github.com/owner888/apkx.git
 ln -s "$(pwd)/apkx/bin/apkx" /usr/local/bin/apkx
 
 # Check environment & bundled tools
 apkx doctor
+
+# Upgrade to latest version anytime
+apkx upgrade
 
 # (Optional) Install as a Pig Coding Agent skill
 pig install git:github.com/owner888/apkx

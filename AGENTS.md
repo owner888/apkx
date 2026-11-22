@@ -20,9 +20,10 @@ bin/
   dex-tools-2.1/            Bundled dex2jar suite
   reconstruct-cli-1.3.22.jar Bundled ProGuard mapping deobfuscator
   jd-gui-1.6.6.jar          Bundled JD-GUI 1.6.6 (`apkx jd`)
+install.sh                  One-line `curl | sh` GitHub installer with automatic OS dependency setup
 lib/
   core.sh                   ANSI colors, logging, cross-platform sed helpers, toolchain & config loader
-  doctor.sh                 `doctor`, `setup`, and `framework` commands
+  doctor.sh                 `doctor`, `setup`, `upgrade`, and `framework` commands
   decode.sh                 `decode` (apktool + jadx) and `convert` (APKM/XAPK merger + PairIP bypass)
   build.sh                  `build`, `package`, multi-variant clones, AAR/Java-plugin/Go-native injection
   smali.sh                  `s2j`, `jadx` single-smali dependency decompiler, `j2s`, `s2java`, `d2s`, `j2d`
