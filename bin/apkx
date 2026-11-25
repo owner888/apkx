@@ -82,7 +82,8 @@ ${YELLOW}${BOLD}📱 Device & Utilities:${NC}
   ${GREEN}devices, -d${NC}                         List connected devices & show hardware/OS/battery details
   ${GREEN}packages${NC}      ${CYAN}[keyword] [--all]${NC}     List installed packages on device (3rd-party by default)
   ${GREEN}pull${NC}          ${CYAN}<package|keyword>${NC}     Extract installed APK from device (auto-merges split APKs)
-  ${GREEN}wifi, -w${NC}      ${CYAN}[port]${NC}                Switch ADB to wireless TCP/IP debugging
+  ${GREEN}wifi, -w${NC}      ${CYAN}[port|ip[:port]]${NC}      Switch ADB to wireless TCP/IP or connect to IP[:port]
+  ${GREEN}disconnect${NC}    ${CYAN}[all|ip[:port]]${NC}       Disconnect wireless ADB device(s) (defaults to all)
   ${GREEN}usb${NC}                                 Switch ADB back to wired USB debugging
   ${GREEN}screen, -p${NC}                          Capture device screenshot to ./screenshots/ & open preview
   ${GREEN}info, -s${NC}      ${CYAN}[file.apk]${NC}            Inspect APK metadata, component/.so sizes & 64K DEX methods
@@ -230,8 +231,11 @@ main() {
         pull)
             cmd_pull "${2:-}" "${3:-}"
             ;;
-        wifi|--wifi|-wifi|-w|adbwifi)
+        wifi|--wifi|-wifi|-w|adbwifi|connect|--connect)
             cmd_wifi "${2:-5555}"
+            ;;
+        disconnect|--disconnect|-disconnect)
+            cmd_disconnect "${2:-all}"
             ;;
         usb|--usb|-usb|adbusb)
             cmd_usb

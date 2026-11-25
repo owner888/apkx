@@ -319,9 +319,36 @@ detect_device_ip() {
     echo "$ip"
 }
 
-# Switch ADB to WiFi debugging (combines adbwifi + run.sh --wifi)
+# Switch ADB to WiFi debugging or connect directly to an IP[:port]
+# Usage:
+#   apkx wifi [port]        -> switch connected USB device to TCP/IP mode on [port] (default 5555) and connect
+#   apkx wifi <ip[:port]>   -> directly connect to a wireless device without requiring USB
 cmd_wifi() {
-    local port="${1:-5555}"
+    local arg="${1:-5555}"
+
+    if ! command -v "$ADB" &>/dev/null && [ ! -x "$ADB" ]; then
+        fail "adb not found. Please install Android SDK Platform-Tools."
+    fi
+
+    # Direct IP or host:port connection (contains '.' or ':')
+    if [[ "$arg" == *"."* ]] || [[ "$arg" == *":"* ]]; then
+        local target="$arg"
+        if [[ "$target" != *":"* ]]; then
+            target="${target}:5555"
+        fi
+        info "Connecting to wireless device ${CYAN}${target}${NC} ..."
+        local out
+        out=$("$ADB" connect "$target" 2>&1 || true)
+        if echo "$out" | grep -qi "connected to"; then
+            ok "Connected via WiFi: ${GREEN}${target}${NC}"
+            echo -e "  ${DIM}Disconnect wireless ADB: apkx disconnect${NC}"
+        else
+            fail "Failed to connect to ${target}: ${out}"
+        fi
+        return 0
+    fi
+
+    local port="$arg"
     info "Switching ADB to WiFi mode (port ${port})..."
     check_device
 
@@ -340,23 +367,61 @@ cmd_wifi() {
 
     if "$ADB" connect "${ip}:${port}" 2>&1 | grep -q "connected"; then
         ok "Connected via WiFi: ${GREEN}${ip}:${port}${NC} (safe to unplug USB cable)"
-        echo -e "  ${DIM}Switch back to USB: apkx usb${NC}"
+        echo -e "  ${DIM}Disconnect wireless ADB: apkx disconnect  |  Switch back to USB: apkx usb${NC}"
     else
-        fail "Failed to connect to ${ip}:${port}. Check that Mac and phone are on the same LAN."
+        fail "Failed to connect to ${ip}:${port}. Check that computer and phone are on the same LAN."
     fi
+}
+
+# Disconnect wireless/TCP ADB device(s)
+# Usage:
+#   apkx disconnect [all|--all|-a]  -> disconnect all wireless/TCP ADB devices at once
+#   apkx disconnect <ip[:port]>     -> disconnect a specific wireless device
+cmd_disconnect() {
+    local target="${1:-all}"
+
+    if ! command -v "$ADB" &>/dev/null && [ ! -x "$ADB" ]; then
+        fail "adb not found. Please install Android SDK Platform-Tools."
+    fi
+
+    case "$target" in
+        ""|all|--all|-a)
+            local wifi_devs
+            wifi_devs=$("$ADB" devices | awk 'NR>1 && $1 ~ /:/ {print $1}' || true)
+            "$ADB" disconnect >/dev/null 2>&1 || true
+            if [ -n "$wifi_devs" ]; then
+                while IFS= read -r dev; do
+                    [ -z "$dev" ] && continue
+                    info "Disconnected: ${CYAN}${dev}${NC}"
+                done <<< "$wifi_devs"
+                ok "Disconnected all wireless ADB devices"
+            else
+                ok "Disconnected all wireless ADB sessions (no active TCP/IP devices were listed)"
+            fi
+            ;;
+        *)
+            local resolved="$target"
+            if [[ "$resolved" != *":"* ]]; then
+                local matched
+                matched=$("$ADB" devices | awk -v ip="$resolved" 'NR>1 && index($1, ip ":") == 1 {print $1; exit}' || true)
+                resolved="${matched:-${resolved}:5555}"
+            fi
+            info "Disconnecting ${CYAN}${resolved}${NC} ..."
+            local out
+            out=$("$ADB" disconnect "$resolved" 2>&1 || true)
+            if echo "$out" | grep -qi "disconnected"; then
+                ok "Disconnected ${CYAN}${resolved}${NC}"
+            else
+                warn "${out:-Could not disconnect ${resolved}}"
+            fi
+            ;;
+    esac
 }
 
 # Switch ADB back to USB mode
 cmd_usb() {
     info "Switching ADB back to USB mode..."
-    local wifi_devs
-    wifi_devs=$("$ADB" devices | grep -E "^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:" | awk '{print $1}' || true)
-    if [ -n "$wifi_devs" ]; then
-        echo "$wifi_devs" | while IFS= read -r dev; do
-            info "Disconnecting WiFi device: ${dev}"
-            "$ADB" disconnect "$dev" 2>/dev/null || true
-        done
-    fi
+    cmd_disconnect all
     "$ADB" usb 2>/dev/null || true
     sleep 1
     check_device

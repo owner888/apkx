@@ -99,7 +99,8 @@ apkx info app.apk           # or: apkx -s app.apk
 # Capture device screenshot to ./screenshots/
 apkx screen                 # or: apkx -p
 
-# Switch ADB between WiFi and USB
-apkx wifi [port]            # or: apkx -w
+# Switch ADB between WiFi and USB, or disconnect wireless ADB
+apkx wifi [port|ip[:port]]  # or: apkx -w
+apkx disconnect [all|ip]    # Disconnect all wireless ADB devices at once (or a specific IP[:port])
 apkx usb
 ```

@@ -27,7 +27,7 @@ lib/
   decode.sh                 `decode` (apktool + jadx) and `convert` (APKM/XAPK merger + PairIP bypass)
   build.sh                  `build`, `package`, multi-variant clones, AAR/Java-plugin/Go-native injection
   smali.sh                  `s2j`, `jadx` single-smali dependency decompiler, `j2s`, `s2java`, `d2s`, `j2d`
-  device.sh                 `run`, `brl`, `logcat`, `debug`, `crash`, `wifi`, `usb`, `device`, `screen`
+  device.sh                 `run`, `brl`, `logcat`, `debug`, `crash`, `wifi`, `disconnect`, `usb`, `device`, `screen`
   inspect.sh                `pkginfo`, `size` (component/.so/64K DEX method analysis), `version`
   ai.sh                     AI unattended modes: `build-only` (-b), `test` (-t), `log-dump` (-g)
 examples/

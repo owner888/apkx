@@ -19,7 +19,7 @@ All required reverse-engineering JARs (`apktool` 3.0.3 with pre-publicized Andro
 - **Real-Device Run & Debug Suite**:
   - One-command build -> install (with automatic uninstall-reinstall fallback on signature conflict) -> resolve launch activity -> stream colored `logcat` (`apkx run` / `apkx -r`).
   - Dedicated Crash/ANR monitor (`apkx crash` / `apkx -x`), PID-filtered log streams (`apkx log --pid`), and bounded N-second log dumps (`apkx log 10`).
-  - One-command ADB over WiFi (`apkx wifi` / `apkx -w`) & USB switch (`apkx usb`), screenshot capture (`apkx screen` / `apkx -p`), and connected devices & hardware details (`apkx devices` / `apkx -d`).
+  - One-command ADB over WiFi (`apkx wifi` / `apkx -w`), wireless disconnect (`apkx disconnect [all|ip[:port]]`), USB switch (`apkx usb`), screenshot capture (`apkx screen` / `apkx -p`), and connected devices & hardware details (`apkx devices` / `apkx -d`).
 - **APK Metadata, Size & 64K DEX Method Analyzer**: Displays package/SDK/activity info, breaks down APK size by DEX, `lib/`, `res/`, `assets/`, lists every `.so` file, and calculates DEX method references against the 64K limit (`apkx info` / `apkx -s`).
 - **AI Agent Unattended Modes**:
   - `apkx build` (`-b`): Headless build & sign without requiring a connected phone.
@@ -125,7 +125,8 @@ apkx pull GoogleCamera      # Pull & merge installed app into standalone APK
 apkx sign app.apk
 
 # WiFi debugging & screenshots
-apkx wifi                   # or: apkx -w
+apkx wifi                   # or: apkx -w (also supports direct IP: apkx wifi <ip[:port]>)
+apkx disconnect             # Disconnect all wireless ADB devices (or: apkx disconnect all / <ip[:port]>)
 apkx usb
 apkx screen                 # or: apkx -p
 

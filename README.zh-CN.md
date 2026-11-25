@@ -19,7 +19,7 @@
 - **真机一键运行与调试流**：
   - 编译 → 安装（签名冲突时自动卸载重装）→ 自动解析 Launch Activity 启动 → 附着彩色 `logcat`（`apkx run` / `apkx -r`）。
   - **日志与崩溃监控**：支持实时日志（`apkx log`）、按 PID 过滤（`apkx log --pid`）、定时抓取 N 秒落盘退出（`apkx log 10`）以及双通道 Crash 专项监控（`apkx crash` / `-x`）。
-  - **设备工具箱**：设备列表与硬件/系统/电量详情（`apkx devices` / `-d`）、一键切换 WiFi 调试（`apkx wifi` / `-w`）与切回 USB（`apkx usb`）、一键截屏并打开预览（`apkx screen` / `-p`）。
+  - **设备工具箱**：设备列表与硬件/系统/电量详情（`apkx devices` / `-d`）、一键切换/连接 WiFi 调试（`apkx wifi` / `-w`）、断开无线连接（`apkx disconnect [all|ip[:port]]`）、切回 USB（`apkx usb`）、一键截屏并打开预览（`apkx screen` / `-p`）。
 - **APK 信息、体积与 64K 方法数体检 (`apkx info` / `-s`)**：一站式展示包名/版本/SDK/入口 Activity、DEX/`lib/`/`res/`/`assets/` 占比、所有 `.so` 动态库明细及 DEX 方法数占 64K 上限比例。
 - **AI Agent 无人值守友好模式**：
   - `apkx build` (`-b`)：无需连接手机的纯构建与签名。
@@ -125,7 +125,8 @@ apkx pull GoogleCamera      # 从手机提取对应 App 并自动合并签名为
 apkx sign app.apk
 
 # WiFi 无线调试与截屏
-apkx wifi                   # 或: apkx -w
+apkx wifi                   # 或: apkx -w（也支持直连 IP：apkx wifi <ip[:port]>）
+apkx disconnect             # 一次性断开所有无线设备（也可: apkx disconnect all 或指定 <ip[:port]>）
 apkx usb
 apkx screen                 # 或: apkx -p
 
